@@ -60,7 +60,7 @@ G4HadFinalState *G4ParticleHPCaptureFS::ApplyYourself(const G4HadProjectile &the
     theNeutron.SetMomentum(incidentParticle->Get4Momentum().vect());
     theNeutron.SetKineticEnergy(eKinetic);
 
-    Log(routine) << "neutron kinetic = " << eKinetic << endlog;
+    //Log(routine) << "neutron kinetic = " << eKinetic << endlog;
 // prepare target
     G4ReactionProduct theTarget;
     G4Nucleus aNucleus;
@@ -78,19 +78,35 @@ G4HadFinalState *G4ParticleHPCaptureFS::ApplyYourself(const G4HadProjectile &the
     theNeutron.Lorentz(theNeutron, -1 * theTarget);
     eKinetic = theNeutron.GetKineticEnergy();
 
+
+
+
+
+
+
+
+
 // dice the photons
-    G4cout << "\n\n\n\n"<< getenv("SIMPLE_NEUTRON_CAPTURE_MODEL") << theBaseA  << theBaseZ << Storage::Get()->CheckNeutronCaptureData(static_cast<G4int>(theBaseZ), static_cast<G4int>(theBaseA))<< endl;
+
     G4ReactionProductVector *thePhotons = 0;
-    if(getenv("SIMPLE_NEUTRON_CAPTURE_MODEL") &&
-            Storage::Get()->CheckNeutronCaptureData(static_cast<G4int>(theBaseZ), static_cast<G4int>(theBaseA))) {
-        G4cout << "\n\n\n\nVNUTRI!!" << endl;
+    const char *SIMPLE_NEUTRON_CAPTURE_MODEL = getenv("SIMPLE_NEUTRON_CAPTURE_MODEL");
+    bool USE_SIMPLE_NEUTRON_CAPTURE_MODEL = false;
+    G4int nucleusZ = static_cast<G4int>(theBaseZ);
+    G4int nucleusA = static_cast<G4int>(theBaseA);
+
+    if (SIMPLE_NEUTRON_CAPTURE_MODEL != 0) {
+        USE_SIMPLE_NEUTRON_CAPTURE_MODEL = true;
+    }
+
+    if (USE_SIMPLE_NEUTRON_CAPTURE_MODEL && Storage::Get()->CheckNeutronCaptureData(nucleusZ, nucleusA)) {
         G4double rand = G4UniformRand();
         G4double probability = 0.0;
         vector<G4double> gammaEnergies;
-        vector<NeutronCaptureGammas> neutronCaptureGammas = Storage::Get()->GetNeutronCaptureData(static_cast<G4int>(theBaseZ), static_cast<G4int>(theBaseA));
-        for(int j = 0; j < neutronCaptureGammas.size(); j++) {
+        vector<NeutronCaptureGammas> neutronCaptureGammas = Storage::Get()->GetNeutronCaptureData(nucleusZ, nucleusA);
+
+        for (int j = 0; j < neutronCaptureGammas.size(); j++) {
             probability += neutronCaptureGammas[j].probability;
-            if(rand <= probability) {
+            if (rand <= probability) {
                 gammaEnergies = neutronCaptureGammas[j].gammaEnergies;
                 break;
             }
@@ -100,7 +116,7 @@ G4HadFinalState *G4ParticleHPCaptureFS::ApplyYourself(const G4HadProjectile &the
 
             G4ReactionProduct *thePhoton = new G4ReactionProduct;
             thePhoton->SetDefinition(G4Gamma::Gamma());
-            thePhoton->SetMomentum(gammaEnergies[i]*MeV);
+            thePhoton->SetMomentum(gammaEnergies[i] * MeV);
             // go to lab system
             thePhoton->Lorentz(*thePhoton, theTarget);
             //adding photons to result
@@ -108,20 +124,30 @@ G4HadFinalState *G4ParticleHPCaptureFS::ApplyYourself(const G4HadProjectile &the
             theOne->SetDefinition(G4Gamma::Gamma());
             theOne->SetMomentum(thePhoton->GetMomentum());
             theResult.AddSecondary(theOne);
-            G4cout << "\n\nGenerated Photon:"<< gammaEnergies[i] << "\n";
         }
         theResult.SetStatusChange(stopAndKill);
         return &theResult;
     }
+
+
+
+
+
+
+
     if (HasFSData() && !getenv("G4NEUTRONHP_USE_ONLY_PHOTONEVAPORATION")) {
         //NDL has final state data
         if (hasExactMF6) {
+            Log(routine) << "has exact mf6" << endlog;
             theMF6FinalState.SetTarget(theTarget);
             theMF6FinalState.SetProjectileRP(theNeutron);
             thePhotons = theMF6FinalState.Sample(eKinetic);
-        } else
+        } else {
+            Log(routine) << "not has exact mf6" << endlog;
             thePhotons = theFinalStatePhotons.GetPhotons(eKinetic);
+        }
     } else {
+        Log(routine) << "Ne zachli if" << endlog;
         //NDL does not have final state data or forced to use PhotoEvaporation model
         G4ThreeVector aCMSMomentum = theNeutron.GetMomentum() + theTarget.GetMomentum();
         G4LorentzVector p4(aCMSMomentum, theTarget.GetTotalEnergy() + theNeutron.GetTotalEnergy());

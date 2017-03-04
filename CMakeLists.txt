@@ -7,7 +7,7 @@ project(B1)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../B1-build/")
-set(Geant4_DIR "/home/krab/programs/geant4.10.02.p02/lib/Geant4-10.2.2/")
+set(Geant4_DIR "/home/krab/programs/geant4.10.01.p03-install/lib/Geant4-10.1.3/")
 set(PROJECT_BINARY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../B1-build/")
 #----------------------------------------------------------------------------
 # Find Geant4 package, activating all available UI and Vis drivers by default
